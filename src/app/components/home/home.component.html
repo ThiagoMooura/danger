@@ -1,0 +1,13 @@
+<div class="w-full h-44 bg-white z-0"></div>
+
+<div class="cardwrap w-full pt-10 px-10 bg-black" #cardwrap>
+  <div class="w-full bg-white absolute top-0 z-10 h-44">
+
+  </div>
+
+  <div class="background-light" #light></div>
+
+  <div class="card relative bg-white" *ngFor="let cardText of cards" (mouseenter)="onCardMouseEnter($event)">
+    {{ cardText }}
+  </div>
+</div>
