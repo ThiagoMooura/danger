@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Input, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Required for ngFor
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule], // Import CommonModule for directives like ngFor
+  imports: [CommonModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -19,14 +19,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private targetX = 0;
   private targetY = 0;
   private animationFrameId: number | undefined;
-  activeIndex: number = 1; // começa no do meio
+  selectedCardIndex: number | null = null; // Track the index of the hovered card
+
   constructor() { }
 
   ngOnInit(): void {
   }
 
   ngAfterViewInit(): void {
-    // Initialize light position to the middle card
     this.initializeLightPosition();
     this.animate();
   }
@@ -40,10 +40,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeLightPosition(): void {
     if (this.containerRef && this.lightRef && this.cards.length > 0) {
       const container = this.containerRef.nativeElement;
-      // Find the actual card elements within the container
-      const cardElements = Array.from(container.children).filter(child => child.classList.contains('card')) as HTMLDivElement[];
+      const cardElements = Array.from(container.querySelectorAll('.card')) as HTMLDivElement[];
 
       const middleCardIndex = Math.floor(cardElements.length / 2);
+      this.selectedCardIndex = middleCardIndex; // Set initial selected card
       const middleCardElement = cardElements[middleCardIndex];
 
       if (middleCardElement) {
@@ -71,7 +71,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.animationFrameId = requestAnimationFrame(this.animate);
   };
 
-  onCardMouseEnter(event: MouseEvent): void {
+  onCardMouseEnter(event: MouseEvent, index: number): void {
+    this.selectedCardIndex = index;
     const card = event.currentTarget as HTMLDivElement;
     if (this.containerRef) {
       const containerRect = this.containerRef.nativeElement.getBoundingClientRect();
@@ -82,5 +83,4 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  
 }
