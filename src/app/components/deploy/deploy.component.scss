@@ -1,0 +1,321 @@
+// ─── Cron Editor Component ───────────────────────────────────────────────────
+// Depende de Tailwind (ou suas variáveis CSS globais).
+// Ajuste as variáveis de cor conforme o design system do seu projeto.
+
+:host {
+  display: block;
+}
+
+// ── Tokens locais (sobrescreva conforme necessário) ──────────────────────────
+$color-border:         #e4e4e7;
+$color-border-focus:   #6366f1;
+$color-border-error:   #ef4444;
+$color-text:           #18181b;
+$color-text-secondary: #71717a;
+$color-text-muted:     #a1a1aa;
+$color-text-error:     #dc2626;
+$color-text-success:   #16a34a;
+$color-bg-card:        #f9f9fb;
+$color-bg-error:       #fef2f2;
+$color-bg-success:     #f0fdf4;
+$color-accent-bg:      #eef2ff;
+$color-accent-text:    #4338ca;
+$radius:               8px;
+$radius-pill:          20px;
+$transition:           0.15s ease;
+
+// ── Layout principal ─────────────────────────────────────────────────────────
+.cron-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: $color-text-muted;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+// ── Linha de campos ──────────────────────────────────────────────────────────
+.fields-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.sep {
+  font-size: 22px;
+  color: $color-text-muted;
+  padding-top: 26px;
+  flex-shrink: 0;
+  user-select: none;
+  line-height: 1;
+}
+
+// ── Campo individual ─────────────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: $color-text-muted;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cron-input {
+  width: 100%;
+  text-align: center;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: $color-text;
+  background: #fff;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 9px 6px;
+  outline: none;
+  transition:
+    border-color $transition,
+    box-shadow $transition;
+
+  &::placeholder {
+    color: $color-text-muted;
+    font-weight: 400;
+  }
+
+  &:hover {
+    border-color: darken($color-border, 8%);
+  }
+
+  &:focus {
+    border-color: $color-border-focus;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+
+  &.invalid {
+    border-color: $color-border-error;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    color: $color-text-error;
+  }
+}
+
+.field-hint {
+  font-size: 10px;
+  color: $color-text-muted;
+  min-height: 14px;
+  text-align: center;
+}
+
+// ── Card de descrição ─────────────────────────────────────────────────────────
+.desc-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  min-height: 50px;
+  transition: border-color $transition, background $transition;
+
+  &--error {
+    background: $color-bg-error;
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+
+  &--clock {
+    color: $color-accent-text;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E");
+  }
+
+  &--error {
+    color: $color-text-error;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
+  }
+}
+
+.desc-text {
+  font-size: 14px;
+  color: $color-text;
+  line-height: 1.5;
+
+  &--error {
+    color: $color-text-error;
+  }
+}
+
+// ── Linha da expressão raw ────────────────────────────────────────────────────
+.raw-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.raw-label {
+  font-size: 12px;
+  color: $color-text-muted;
+  flex-shrink: 0;
+}
+
+.raw-value {
+  flex: 1;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 13px;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 4px 10px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all $transition;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: $color-bg-card;
+    border-color: darken($color-border, 8%);
+    color: $color-text;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &--success {
+    color: $color-text-success;
+    border-color: rgba(22, 163, 74, 0.4);
+    background: $color-bg-success;
+  }
+}
+
+// ── Presets ──────────────────────────────────────────────────────────────────
+.presets {
+  margin-top: 18px;
+}
+
+.presets-label {
+  font-size: 12px;
+  color: $color-text-muted;
+  margin-bottom: 8px;
+}
+
+.preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-tag {
+  font-size: 12px;
+  padding: 4px 11px;
+  border: 1px solid $color-border;
+  border-radius: $radius-pill;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all $transition;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-border-focus;
+    color: $color-accent-text;
+    background: $color-accent-bg;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// ── Dica de teclado ───────────────────────────────────────────────────────────
+.keyboard-hint {
+  font-size: 11px;
+  color: $color-text-muted;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: 10px;
+    padding: 1px 5px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    background: #fff;
+    color: $color-text-secondary;
+    box-shadow: 0 1px 0 $color-border;
+    line-height: 1.4;
+  }
+}
+
+// ── Responsivo ────────────────────────────────────────────────────────────────
+@media (max-width: 520px) {
+  .fields-row {
+    gap: 4px;
+  }
+
+  .cron-input {
+    font-size: 14px;
+    padding: 8px 4px;
+  }
+
+  .sep {
+    font-size: 16px;
+    padding-top: 24px;
+  }
+
+  .field-label {
+    font-size: 10px;
+  }
+}

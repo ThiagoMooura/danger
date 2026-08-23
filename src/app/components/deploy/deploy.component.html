@@ -1,0 +1,136 @@
+<div class="p-8">
+  <pre
+    class="bg-black p-4"
+  ><code class="font-mono text-white" [innerHTML]="highlightedCode"></code></pre>
+
+
+
+  <app-cron-editor
+  ></app-cron-editor>
+
+
+
+
+
+
+  <div class="cron-editor">
+    <p class="section-label">Expressão Cron</p>
+
+    <!-- Campos individuais -->
+    <div class="fields-row" role="group" aria-label="Campos da expressão cron">
+      @for (field of fields; track field.id; let i = $index, last = $last) {
+        <div class="field">
+          <label [for]="field.id" class="field-label">{{ field.label }}</label>
+
+          <input
+            #cronInput
+            [id]="field.id"
+            type="text"
+            [(ngModel)]="field.value"
+            [placeholder]="field.placeholder"
+            [class.invalid]="!isValid"
+            class="cron-input"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            (input)="onInput()"
+            (focus)="onFocus(field)"
+            (blur)="onBlur(field)"
+            (keydown)="onKeydown($event, i)"
+            [attr.aria-label]="field.label"
+            [attr.aria-invalid]="!isValid"
+          />
+
+          <span class="field-hint" aria-live="polite">{{ field.hint }}</span>
+        </div>
+
+        @if (!last) { <span class="sep">·</span> }
+      }
+    </div>
+
+    <!-- Descrição -->
+    <div
+      class="desc-card"
+      [class.desc-card--error]="!isValid"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <i
+        class="icon"
+        [class.icon--clock]="isValid"
+        [class.icon--error]="!isValid"
+        aria-hidden="true"
+      ></i>
+      <span class="desc-text" [class.desc-text--error]="!isValid">
+        {{ description }}
+      </span>
+    </div>
+
+    <!-- Expressão raw + copiar -->
+    <div class="raw-row">
+      <span class="raw-label">Expressão:</span>
+      <code class="raw-value" aria-label="Expressão cron completa">{{ cronExpression }}</code>
+      <button
+        class="copy-btn"
+        [class.copy-btn--success]="copySuccess"
+        (click)="copyExpression()"
+        [attr.aria-label]="copyLabel + ' expressão cron'"
+      >
+        <svg
+          *ngIf="!copySuccess"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+        <svg
+          *ngIf="copySuccess"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        {{ copyLabel }}
+      </button>
+    </div>
+
+    <!-- Presets -->
+    <div class="presets">
+      <p class="presets-label">Atalhos rápidos</p>
+      <div class="preset-tags" role="list">
+        <button
+          *ngFor="let preset of presets"
+          class="preset-tag"
+          role="listitem"
+          (click)="applyPreset(preset.expr)"
+          [attr.aria-label]="'Aplicar: ' + preset.label + ' (' + preset.expr + ')'"
+          [title]="preset.expr"
+        >
+          {{ preset.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Dica de teclado -->
+    <p class="keyboard-hint" aria-hidden="true">
+      <kbd>←</kbd><kbd>→</kbd> navega entre campos &nbsp;·&nbsp; <kbd>↑</kbd><kbd>↓</kbd> incrementa
+      valores numéricos
+    </p>
+  </div>
+</div>
