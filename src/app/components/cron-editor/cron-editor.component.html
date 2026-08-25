@@ -58,7 +58,7 @@
           class="w-full rounded-lg border px-1 py-2.5 text-center font-mono text-sm font-medium outline-none transition-all duration-150 sm:text-base
             focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1
             @media(forced-colors:active):focus-visible:outline-2
-            in-data-invalid:border-red-400 in-data-invalid:text-red-600 in-data-invalid:ring-2 in-data-invalid:ring-red-100"
+            [[data-invalid]_&]:border-red-400 [[data-invalid]_&]:text-red-600 [[data-invalid]_&]:ring-2 [[data-invalid]_&]:ring-red-100"
           [class]="isValid()
             ? 'border-zinc-200 bg-zinc-50 text-zinc-800 hover:border-zinc-300 focus-visible:border-indigo-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-indigo-100'
             : 'border-red-300 bg-red-50 text-red-700 ring-2 ring-red-100 focus-visible:border-red-400 focus-visible:ring-red-200'"
@@ -67,7 +67,7 @@
         <!-- Hint (sempre no DOM, visível só no foco) -->
         <span
           [id]="field.id + '-hint'"
-          class="h-3.5 text-center text-[10px] text-zinc-400"
+          class="h-3.5 text-center text-[10px] text-zinc-400 transition-opacity duration-100"
           [class.opacity-0]="focusedIndex() !== i"
           [class.opacity-100]="focusedIndex() === i"
           aria-live="polite"
@@ -79,7 +79,7 @@
 
       <!-- Separador -->
       @if (!last) {
-        <span class="mt-6.5 shrink-0 text-lg text-zinc-300 sm:text-xl" aria-hidden="true">·</span>
+        <span class="mt-[26px] shrink-0 text-lg text-zinc-300 sm:mt-[28px] sm:text-xl" aria-hidden="true">·</span>
       }
 
     }
@@ -91,7 +91,7 @@
     role="status"
     aria-live="polite"
     aria-atomic="true"
-    class="flex min-h-13 items-center gap-3 rounded-lg border px-4 py-3 transition-colors duration-200"
+    class="flex min-h-[52px] items-center gap-3 rounded-lg border px-4 py-3 transition-colors duration-200"
     [class]="isValid()
       ? 'border-indigo-100 bg-indigo-50'
       : 'border-red-100 bg-red-50'"
@@ -120,20 +120,36 @@
     </p>
   </div>
 
+  <!-- Aviso DOM/DOW (regra AWS) -->
+  @if (domDowWarning()) {
+    <div
+      role="alert"
+      class="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
+    >
+      <svg class="mt-0.5 size-4 shrink-0 text-amber-500" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <p class="text-xs leading-relaxed text-amber-700">{{ domDowWarning() }}</p>
+    </div>
+  }
+
   <!-- Expressão raw + botão copiar -->
   <div class="flex items-center gap-2">
-    <span class="shrink-0 text-xs text-zinc-400">Expressão:</span>
+    <span class="shrink-0 text-xs text-zinc-400">AWS:</span>
     <code
       class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 font-mono text-xs tracking-wide text-zinc-600"
-      aria-label="Expressão cron completa"
+      aria-label="Expressão AWS cron completa"
     >
-      {{ cronExpression() }}
+      {{ awsCronExpression() }}
     </code>
 
     <button
       type="button"
       (click)="copyExpression()"
-      [attr.aria-label]="copyLabel() + ' expressão ' + cronExpression()"
+      [attr.aria-label]="copyLabel() + ' expressão ' + awsCronExpression()"
       class="flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 active:scale-95"
       [class]="copyState() === 'copied'
         ? 'border-emerald-300 bg-emerald-50 text-emerald-700'

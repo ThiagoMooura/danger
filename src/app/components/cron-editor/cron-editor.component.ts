@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import cronstrue from 'cronstrue/i18n';
-import { toEnglishCron, toNumericCron } from './cron-translation';
 
 interface CronField {
   id: string;
@@ -28,6 +27,8 @@ interface CronPreset {
   expr: string;
 }
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 @Component({
   selector: 'app-cron-editor',
   standalone: true,
@@ -40,11 +41,12 @@ export class CronEditorComponent implements OnInit, AfterViewInit {
 
   // ── Estado ──────────────────────────────────────────────────────────────────
   readonly fields = signal<CronField[]>([
-    { id: 'cron-minute', label: 'Minuto',        shortLabel: 'min',  value: '*', min: 0, max: 59, examples: ['0-59', '*/5', '0,30', '15'] },
-    { id: 'cron-hour',   label: 'Hora',           shortLabel: 'hora', value: '*', min: 0, max: 23, examples: ['0-23', '*/2', '8-18', '9'] },
-    { id: 'cron-dom',    label: 'Dia do mês',     shortLabel: 'dia',  value: '*', min: 1, max: 31, examples: ['1-31', '*/2', '1,15', '1'] },
-    { id: 'cron-month',  label: 'Mês',            shortLabel: 'mês',  value: '*', min: 1, max: 12, examples: ['1-12', 'jan', 'abr,out', 'jan-jun'] },
-    { id: 'cron-dow',    label: 'Dia da semana',  shortLabel: 'sem',  value: '*', min: 0, max: 6,  examples: ['0-6', 'seg-sex', 'dom,sab', 'qua'] },
+    { id: 'cron-minute', label: 'Minuto',        shortLabel: 'min',  value: '0',  min: 0,           max: 59,           examples: ['0-59', '*/5', '0,30', '15'] },
+    { id: 'cron-hour',   label: 'Hora',           shortLabel: 'hora', value: '*',  min: 0,           max: 23,           examples: ['0-23', '*/2', '8-18', '9'] },
+    { id: 'cron-dom',    label: 'Dia do mês',     shortLabel: 'dia',  value: '*',  min: 1,           max: 31,           examples: ['1-31', '*/2', '1,15', '?'] },
+    { id: 'cron-month',  label: 'Mês',            shortLabel: 'mês',  value: '*',  min: 1,           max: 12,           examples: ['1-12', 'JAN', 'APR,OCT', 'JAN-JUN'] },
+    { id: 'cron-dow',    label: 'Dia da semana',  shortLabel: 'sem',  value: '?',  min: 0,           max: 7,            examples: ['?', 'MON-FRI', 'SUN,SAT', '2'] },
+    { id: 'cron-year',   label: 'Ano',            shortLabel: 'ano',  value: '*',  min: CURRENT_YEAR, max: 2199,        examples: ['*', String(CURRENT_YEAR), `${CURRENT_YEAR}-${CURRENT_YEAR + 5}`, '*/2'] },
   ]);
 
   readonly copyState = signal<'idle' | 'copied'>('idle');
@@ -54,42 +56,58 @@ export class CronEditorComponent implements OnInit, AfterViewInit {
 
   // ── Computeds ───────────────────────────────────────────────────────────────
 
-  /** Expressão normalizada com valores numéricos (exibição e cópia) */
   readonly cronExpression = computed(() =>
-    toNumericCron(this.fields().map(f => f.value))
+    this.fields().map(f => f.value.trim() || '*').join(' ')
   );
 
-  /** Expressão traduzida PT→EN para passar ao cronstrue */
-  readonly cronExpressionEn = computed(() =>
-    toEnglishCron(this.fields().map(f => f.value))
+  readonly awsCronExpression = computed(() =>
+    `cron(${this.cronExpression()})`
   );
 
   readonly descriptionResult = computed(() => {
+    // cronstrue não suporta o campo ano — passamos só os 5 primeiros campos
+    const fiveField = this.fields().slice(0, 5).map(f => f.value.trim() || '*').join(' ');
     try {
-      const raw = cronstrue.toString(this.cronExpressionEn(), {
+      const raw = cronstrue.toString(fiveField, {
         locale: 'pt_BR',
         use24HourTimeFormat: true,
       });
-      return { ok: true, text: raw.replace('da hora', 'de cada hora') };
+      const yearField = this.fields()[5].value.trim();
+      const yearSuffix = yearField && yearField !== '*'
+        ? ` (ano: ${yearField})`
+        : '';
+      return { ok: true, text: raw.replace('da hora', 'de cada hora') + yearSuffix };
     } catch {
       return { ok: false, text: 'Expressão inválida — verifique os campos acima' };
     }
   });
 
-  readonly isValid   = computed(() => this.descriptionResult().ok);
+  readonly isValid    = computed(() => this.descriptionResult().ok);
   readonly description = computed(() => this.descriptionResult().text);
-  readonly copyLabel = computed(() => this.copyState() === 'copied' ? 'Copiado!' : 'Copiar');
+  readonly copyLabel  = computed(() => this.copyState() === 'copied' ? 'Copiado!' : 'Copiar');
+
+  // Aviso quando dia do mês e dia da semana são ambos definidos (regra AWS)
+  readonly domDowWarning = computed(() => {
+    const dom = this.fields()[2].value.trim();
+    const dow = this.fields()[4].value.trim();
+    const domSet = dom !== '*' && dom !== '?';
+    const dowSet = dow !== '*' && dow !== '?';
+    if (domSet && dowSet) {
+      return 'Na AWS, dia do mês e dia da semana não podem ser especificados juntos. Use "?" em um deles.';
+    }
+    return '';
+  });
 
   readonly presets: CronPreset[] = [
-    { label: 'A cada minuto',  expr: '* * * * *'    },
-    { label: 'A cada 5 min',   expr: '*/5 * * * *'  },
-    { label: 'A cada 15 min',  expr: '*/15 * * * *' },
-    { label: 'A cada hora',    expr: '0 * * * *'    },
-    { label: 'A cada 6 horas', expr: '0 */6 * * *'  },
-    { label: 'Meia-noite',     expr: '0 0 * * *'    },
-    { label: 'Seg-Sex 9h',     expr: '0 9 * * seg-sex' },
-    { label: 'Todo dia 1°',    expr: '0 0 1 * *'    },
-    { label: 'Todo domingo',   expr: '0 0 * * dom'  },
+    { label: 'A cada minuto',  expr: '* * * * ? *'        },
+    { label: 'A cada 5 min',   expr: '*/5 * * * ? *'      },
+    { label: 'A cada 15 min',  expr: '*/15 * * * ? *'     },
+    { label: 'A cada hora',    expr: '0 * * * ? *'        },
+    { label: 'A cada 6 horas', expr: '0 */6 * * ? *'      },
+    { label: 'Meia-noite',     expr: '0 0 * * ? *'        },
+    { label: 'Seg–Sex 9h',     expr: '0 9 ? * MON-FRI *'  },
+    { label: 'Todo dia 1°',    expr: '0 0 1 * ? *'        },
+    { label: 'Todo domingo',   expr: '0 0 ? * 0 *'        },
   ];
 
   // ── Lifecycle ────────────────────────────────────────────────────────────────
@@ -161,7 +179,7 @@ export class CronEditorComponent implements OnInit, AfterViewInit {
 
   async copyExpression(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.cronExpression());
+      await navigator.clipboard.writeText(this.awsCronExpression());
       this.copyState.set('copied');
       this.announceMessage.set('Expressão copiada para a área de transferência');
       setTimeout(() => {
